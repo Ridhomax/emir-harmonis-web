@@ -167,12 +167,12 @@ export default function CekBookingPage() {
                 <div>
                   <p className="text-xs text-slate-500 font-medium">Status Pesanan</p>
                   <span className={`inline-block mt-1 px-3 py-1 text-xs font-bold rounded-full ${
-                    state.booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                    state.booking.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700' :
-                    state.booking.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                    state.booking?.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                    state.booking?.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-700' :
+                    state.booking?.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
                     'bg-red-100 text-red-700'
                   }`}>
-                    {state.booking.status}
+                    {state.booking?.status}
                   </span>
                 </div>
               </div>
@@ -180,29 +180,43 @@ export default function CekBookingPage() {
               <div className="space-y-3 text-sm">
                 <div>
                   <p className="text-slate-500">Nama Pelanggan</p>
-                  <p className="font-medium text-slate-900">{state.booking.customerName}</p>
+                  <p className="font-medium text-slate-900">{state.booking?.customerName}</p>
                 </div>
                 <div>
                   <p className="text-slate-500">Kendaraan & Layanan</p>
-                  <p className="font-medium text-slate-900">{state.booking.vehicleType} - {state.booking.serviceType}</p>
+                  <p className="font-medium text-slate-900">{state.booking?.vehicleType} - {state.booking?.serviceType}</p>
                 </div>
                 <div>
                   <p className="text-slate-500">Jadwal</p>
                   <p className="font-medium text-slate-900">
-                    {new Date(state.booking.bookingDate).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}
+                    {state.booking?.bookingDate ? new Date(state.booking.bookingDate).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' }) : '-'}
                   </p>
                 </div>
               </div>
+              </div>
               
-              {state.booking.status === 'COMPLETED' && !state.booking.paymentMethod && (
+              <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Total Harga</span>
+                  <span className="font-bold text-slate-900">Rp {state.booking?.totalPrice?.toLocaleString('id-ID')}</span>
+                </div>
+                {state.booking?.discountApplied > 0 && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Diskon Poin</span>
+                    <span>-{state.booking?.discountApplied}%</span>
+                  </div>
+                )}
+              </div>
+              
+              {state.booking?.status === 'COMPLETED' && !state.booking?.paymentMethod && (
                 <PaymentForm bookingId={state.booking.id} />
               )}
               
-              {state.booking.status === 'COMPLETED' && state.booking.paymentMethod && (
+              {state.booking?.status === 'COMPLETED' && state.booking?.paymentMethod && (
                 <div className="mt-6 border-t pt-6">
                   <h3 className="font-semibold text-slate-800 mb-3">Status Pembayaran</h3>
                   <div className="bg-green-50 text-green-800 p-4 rounded-xl text-sm flex justify-between items-center border border-green-100">
-                    <span className="font-medium">Metode: {state.booking.paymentMethod}</span>
+                    <span className="font-medium">Metode: {state.booking?.paymentMethod}</span>
                     <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs font-bold">LUNAS</span>
                   </div>
                 </div>
