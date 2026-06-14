@@ -25,7 +25,7 @@ export const Carousel = ({
   items,
   initialScroll = 0,
 }: {
-  items: JSX.Element[];
+  items: React.ReactNode[];
   initialScroll?: number;
 }) => {
   const carouselRef = React.useRef<HTMLDivElement>(null);
@@ -97,9 +97,9 @@ export const Carousel = ({
                     duration: 0.5,
                     delay: 0.2 * index,
                     ease: "easeOut",
-                    once: true,
                   },
                 }}
+                viewport={{ once: true }}
                 key={"card" + index}
                 className="last:pr-[5%] md:last:pr-[33%] rounded-3xl"
               >
