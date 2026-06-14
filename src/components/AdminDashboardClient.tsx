@@ -3,7 +3,7 @@
 import { useState, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { updateBookingStatus } from "@/actions/booking";
+import { updateBookingStatus, updateBookingCost } from "@/actions/booking";
 import { generateBlogPost } from "@/actions/ai";
 
 function AIGenerateButton() {
@@ -23,8 +23,19 @@ export default function AdminDashboardClient({ initialBookings, members, blogPos
   const [activeTab, setActiveTab] = useState("overview");
   const [aiState, aiAction] = useActionState(generateBlogPost, { success: false, message: "", error: "" });
 
+  const [editingCostBooking, setEditingCostBooking] = useState<any>(null);
+  const [costInput, setCostInput] = useState(0);
+  const [reasonInput, setReasonInput] = useState("");
+
   const handleStatusChange = async (id: string, newStatus: string) => {
     await updateBookingStatus(id, newStatus);
+  };
+
+  const handleSaveCost = async () => {
+    if (editingCostBooking) {
+      await updateBookingCost(editingCostBooking.id, costInput, reasonInput);
+      setEditingCostBooking(null);
+    }
   };
 
   return (
@@ -100,6 +111,7 @@ export default function AdminDashboardClient({ initialBookings, members, blogPos
                 <th className="px-6 py-3 text-sm font-medium text-slate-500">Layanan</th>
                 <th className="px-6 py-3 text-sm font-medium text-slate-500">Tanggal</th>
                 <th className="px-6 py-3 text-sm font-medium text-slate-500">Status</th>
+                <th className="px-6 py-3 text-sm font-medium text-slate-500">Biaya</th>
                 <th className="px-6 py-3 text-sm font-medium text-slate-500">Pembayaran</th>
                 <th className="px-6 py-3 text-sm font-medium text-slate-500">Aksi</th>
               </tr>
@@ -127,6 +139,24 @@ export default function AdminDashboardClient({ initialBookings, members, blogPos
                     }`}>
                       {b.status}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col">
+                      <span className="font-bold text-slate-900">Rp {b.totalPrice?.toLocaleString('id-ID')}</span>
+                      {(b.additionalCost > 0) && (
+                        <span className="text-xs text-red-500">+Rp {b.additionalCost.toLocaleString('id-ID')} ({b.additionalCostReason})</span>
+                      )}
+                      <button 
+                        onClick={() => {
+                          setEditingCostBooking(b);
+                          setCostInput(b.additionalCost || 0);
+                          setReasonInput(b.additionalCostReason || "");
+                        }}
+                        className="text-xs text-blue-600 hover:underline mt-1 text-left"
+                      >
+                        Edit Biaya
+                      </button>
+                    </div>
                   </td>
                   <td className="px-6 py-4">
                     {b.paymentMethod ? (
@@ -249,6 +279,58 @@ export default function AdminDashboardClient({ initialBookings, members, blogPos
                  <p className="text-slate-500 text-sm">Belum ada artikel.</p>
                )}
              </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Cost Modal */}
+      {editingCostBooking && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Edit Tambahan Biaya</h3>
+            <div className="mb-4 text-sm text-slate-600 bg-slate-50 p-3 rounded">
+              <p>Pelanggan: <span className="font-medium text-slate-900">{editingCostBooking.customerName}</span></p>
+              <p>Layanan: <span className="font-medium text-slate-900">{editingCostBooking.serviceType} ({editingCostBooking.vehicleType})</span></p>
+              <p>Harga Dasar: <span className="font-medium text-slate-900">Rp {editingCostBooking.basePrice?.toLocaleString('id-ID')}</span></p>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Tambahan Biaya (Rp)</label>
+                <input 
+                  type="number"
+                  value={costInput}
+                  onChange={(e) => setCostInput(Number(e.target.value))}
+                  className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Contoh: 50000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Keterangan / Alasan</label>
+                <input 
+                  type="text"
+                  value={reasonInput}
+                  onChange={(e) => setReasonInput(e.target.value)}
+                  className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                  placeholder="Contoh: Kaca sangat kusam"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button 
+                onClick={() => setEditingCostBooking(null)}
+                className="flex-1 py-2 bg-slate-100 text-slate-700 font-medium rounded-lg hover:bg-slate-200 transition"
+              >
+                Batal
+              </button>
+              <button 
+                onClick={handleSaveCost}
+                className="flex-1 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+              >
+                Simpan
+              </button>
+            </div>
           </div>
         </div>
       )}

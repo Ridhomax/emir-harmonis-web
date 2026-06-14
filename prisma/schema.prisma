@@ -39,6 +39,9 @@ model Booking {
   paymentMethod String?
   paymentProof  String?
   
+  basePrice       Int      @default(0)
+  additionalCost  Int      @default(0)
+  additionalCostReason String?
   totalPrice      Int      @default(0)
   discountApplied Int      @default(0) // Percentage discount, e.g. 20
   pointsAwarded   Boolean  @default(false)

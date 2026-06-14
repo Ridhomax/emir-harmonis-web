@@ -2,6 +2,36 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { getPrice } from "@/lib/pricing";
+
+const FONNTE_TOKEN = process.env.FONNTE_TOKEN;
+
+async function sendWaFonnte(target: string, message: string) {
+  if (!FONNTE_TOKEN) {
+    console.warn("FONNTE_TOKEN is not set. WhatsApp message not sent.");
+    return;
+  }
+  
+  try {
+    const res = await fetch("https://api.fonnte.com/send", {
+      method: "POST",
+      headers: {
+        "Authorization": FONNTE_TOKEN,
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({
+        target,
+        message,
+        countryCode: "62"
+      })
+    });
+    const data = await res.json();
+    console.log("Fonnte Response:", data);
+  } catch (error) {
+    console.error("Fonnte Error:", error);
+  }
+}
+
 
 import { getSession } from "@/lib/auth";
 
@@ -31,13 +61,8 @@ export async function createBooking(prevState: any, formData: FormData) {
       return { success: false, message: "", error: "Maaf, slot waktu ini sudah dipesan. Silakan pilih waktu lain." };
     }
 
-    const PRICING: Record<string, number> = {
-      "Cuci Hidrolik": 70000,
-      "Poles Body": 300000,
-      "Nano Coating": 1500000,
-      "Auto Detailing": 800000,
-    };
-    let totalPrice = PRICING[serviceType] || 50000;
+    const basePrice = getPrice(vehicleType, serviceType);
+    let totalPrice = basePrice;
 
     const session = await getSession();
     let discountApplied = 0;
@@ -63,10 +88,16 @@ export async function createBooking(prevState: any, formData: FormData) {
         serviceType,
         bookingDate,
         userId: session ? (session.id as string) : undefined,
+        basePrice,
+        additionalCost: 0,
         totalPrice,
         discountApplied,
       },
     });
+
+    // Send automatic WA message to customer
+    const waMessage = `Halo *${booking.customerName}*,\n\nTerima kasih! Reservasi Anda di *Emir Harmonis* berhasil dibuat dan sedang menunggu konfirmasi admin.\n\nID Booking: ${booking.id.split('-')[0]}\nLayanan: ${booking.serviceType} (${booking.vehicleType})\nJadwal: ${new Date(booking.bookingDate).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}\nTotal Biaya (Estimasi): Rp ${booking.totalPrice?.toLocaleString('id-ID')}\n\nPembayaran dilakukan di lokasi setelah pengerjaan selesai. Sampai jumpa!`;
+    await sendWaFonnte(booking.whatsapp, waMessage);
 
     revalidatePath("/admin");
     return { 
@@ -80,6 +111,7 @@ export async function createBooking(prevState: any, formData: FormData) {
         vehicleType: booking.vehicleType,
         serviceType: booking.serviceType,
         bookingDate: booking.bookingDate.toISOString(),
+        totalPrice: booking.totalPrice,
       }
     };
   } catch (error) {
@@ -110,6 +142,16 @@ export async function updateBookingStatus(id: string, status: string) {
          data: { pointsAwarded: true }
        });
     }
+
+    // Send WhatsApp notification if confirmed
+    if (status === 'CONFIRMED') {
+      const message = `Halo *${booking.customerName}*,\n\nReservasi Anda di *Emir Harmonis* telah *DIKONFIRMASI*!\n\nID Booking: ${booking.id.split('-')[0]}\nLayanan: ${booking.serviceType} (${booking.vehicleType})\nJadwal: ${new Date(booking.bookingDate).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}\nTotal Biaya (Estimasi): Rp ${booking.totalPrice?.toLocaleString('id-ID')}\n\nSilakan datang ke lokasi kami tepat waktu. Terima kasih!`;
+      await sendWaFonnte(booking.whatsapp, message);
+    } else if (status === 'COMPLETED') {
+      const message = `Halo *${booking.customerName}*,\n\nPengerjaan salon kendaraan Anda telah *SELESAI*!\nTerima kasih telah mempercayakan kendaraan Anda pada *Emir Harmonis*. Jangan lupa untuk datang kembali!`;
+      await sendWaFonnte(booking.whatsapp, message);
+    }
+
 
     revalidatePath("/admin");
     return { success: true };
@@ -147,6 +189,9 @@ export async function checkBookingStatus(prevState: any, formData: FormData) {
         status: booking.status,
         paymentMethod: booking.paymentMethod,
         paymentProof: booking.paymentProof,
+        basePrice: booking.basePrice,
+        additionalCost: booking.additionalCost,
+        additionalCostReason: booking.additionalCostReason,
         totalPrice: booking.totalPrice,
         discountApplied: booking.discountApplied
       }
@@ -209,5 +254,32 @@ export async function submitPayment(prevState: any, formData: FormData) {
   } catch (error) {
     console.error("Error submitting payment:", error);
     return { success: false, error: "Gagal memproses pembayaran." };
+  }
+}
+
+export async function updateBookingCost(id: string, additionalCost: number, additionalCostReason: string) {
+  try {
+    const booking = await prisma.booking.findUnique({ where: { id } });
+    if (!booking) {
+      return { success: false, error: "Booking tidak ditemukan." };
+    }
+
+    // Recalculate total price
+    const newTotalPrice = Math.floor((booking.basePrice + additionalCost) * ((100 - booking.discountApplied) / 100));
+
+    await prisma.booking.update({
+      where: { id },
+      data: {
+        additionalCost,
+        additionalCostReason,
+        totalPrice: newTotalPrice,
+      }
+    });
+
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating cost:", error);
+    return { success: false, error: "Gagal mengupdate biaya." };
   }
 }

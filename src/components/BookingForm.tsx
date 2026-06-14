@@ -3,6 +3,7 @@
 import { useActionState, useState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { createBooking } from "@/actions/booking";
+import { getPrice } from "@/lib/pricing";
 
 const initialState: any = {
   success: false,
@@ -32,6 +33,12 @@ export default function BookingForm() {
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [user, setUser] = useState<any>(null);
+
+  const [selectedVehicle, setSelectedVehicle] = useState("");
+  const [selectedService, setSelectedService] = useState("");
+
+  const estimatedPrice = (selectedVehicle && selectedService) ? getPrice(selectedVehicle, selectedService) : 0;
+
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -107,14 +114,23 @@ export default function BookingForm() {
               <p className="text-sm text-slate-500">Jadwal</p>
               <p className="font-medium text-slate-900">{new Date(state.booking.bookingDate).toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })}</p>
             </div>
+            <div className="col-span-2 mt-2 pt-4 border-t border-slate-200">
+              <p className="text-sm text-slate-500">Total Biaya (Estimasi)</p>
+              <p className="text-xl font-bold text-blue-600">
+                Rp {state.booking.totalPrice?.toLocaleString('id-ID')}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">*Pembayaran dilakukan di lokasi setelah pengerjaan selesai.</p>
+            </div>
           </div>
         </div>
-        <button 
-          onClick={() => window.location.reload()}
-          className="mt-6 w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition"
-        >
-          Buat Reservasi Baru
-        </button>
+        <div className="mt-6 flex flex-col gap-3">
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-3 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200 transition"
+          >
+            Buat Reservasi Baru
+          </button>
+        </div>
       </div>
     );
   }
@@ -180,6 +196,8 @@ export default function BookingForm() {
             id="vehicleType"
             name="vehicleType"
             required
+            value={selectedVehicle}
+            onChange={(e) => setSelectedVehicle(e.target.value)}
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-slate-900"
           >
             <option value="">Pilih</option>
@@ -187,7 +205,8 @@ export default function BookingForm() {
             <option value="Mobil Sedang">Mobil Sedang (Avanza, HR-V)</option>
             <option value="Mobil Besar">Mobil Besar (Pajero, Fortuner)</option>
             <option value="Motor Kecil">Motor Kecil (Beat, Vario)</option>
-            <option value="Motor Besar">Motor Besar (NMAX, PCX)</option>
+            <option value="Motor Sedang">Motor Sedang (NMAX, PCX)</option>
+            <option value="Motor Besar">Motor Besar (Ninja 250, Moge)</option>
           </select>
         </div>
         
@@ -199,13 +218,22 @@ export default function BookingForm() {
             id="serviceType"
             name="serviceType"
             required
+            value={selectedService}
+            onChange={(e) => setSelectedService(e.target.value)}
             className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-slate-900"
           >
             <option value="">Pilih</option>
             <option value="Cuci Hidrolik">Cuci Hidrolik</option>
-            <option value="Poles Body">Poles Body</option>
-            <option value="Nano Coating">Nano Coating</option>
+            <option value="Poles Body & Wax">Poles Body & Wax</option>
             <option value="Auto Detailing">Auto Detailing</option>
+            <option value="Nano Coating">Nano Coating</option>
+            {selectedVehicle.includes("Mobil") && (
+              <>
+                <option value="Interior">Interior Salon</option>
+                <option value="Jamur Kaca">Jamur Kaca</option>
+                <option value="Ruang Mesin">Ruang Mesin</option>
+              </>
+            )}
           </select>
         </div>
       </div>
@@ -266,6 +294,13 @@ export default function BookingForm() {
         required
         value={date && selectedTime ? `${date}T${selectedTime}:00+07:00` : ""} 
       />
+
+      {estimatedPrice > 0 && (
+        <div className="p-4 bg-slate-100 rounded-lg border border-slate-200 flex justify-between items-center">
+          <span className="text-slate-700 font-medium">Estimasi Biaya Dasar:</span>
+          <span className="text-xl font-bold text-slate-900">Rp {estimatedPrice.toLocaleString('id-ID')}</span>
+        </div>
+      )}
 
       {/* Mock UI for DP Payment */}
       <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 flex items-start gap-3">

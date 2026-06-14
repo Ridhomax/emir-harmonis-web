@@ -42,7 +42,7 @@ export default function Navbar() {
             : "w-full max-w-5xl px-4 md:px-8 py-3 shadow-blue-900/10"
         }`}
       >
-        <div className="flex items-center gap-3 w-full md:w-1/3">
+        <div className="flex items-center gap-3 w-auto md:w-1/4">
           <div className="relative group overflow-hidden rounded-lg">
              <img src="/logo.png" alt="Emir Harmonis Logo" className={`w-auto rounded-lg shadow-sm group-hover:scale-110 transition-all duration-500 ${isScrolled ? "h-7" : "h-9"}`} />
           </div>
@@ -52,7 +52,7 @@ export default function Navbar() {
         </div>
         
         {/* Centered Navigation */}
-        <nav className={`hidden md:flex w-1/3 justify-center items-center gap-8 font-medium text-slate-600 transition-all duration-500 ${isScrolled ? "text-sm gap-6" : "text-base gap-8"}`}>
+        <nav className={`hidden md:flex flex-1 justify-center items-center font-medium text-slate-600 transition-all duration-500 whitespace-nowrap ${isScrolled ? "text-sm gap-4" : "text-base gap-6"}`}>
           <Link href="/#services" className="group relative px-2 py-1">
             <span className="group-hover:text-blue-700 transition-colors duration-300">Layanan</span>
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full rounded-full opacity-0 group-hover:opacity-100"></span>
@@ -61,17 +61,17 @@ export default function Navbar() {
             <span className="group-hover:text-blue-700 transition-colors duration-300">Booking</span>
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full rounded-full opacity-0 group-hover:opacity-100"></span>
           </Link>
-          <Link href="/#reviews" className="group relative px-2 py-1">
-            <span className="group-hover:text-blue-700 transition-colors duration-300">Testimoni</span>
+          <Link href="/katalog" className="group relative px-2 py-1">
+            <span className="group-hover:text-blue-700 transition-colors duration-300">Katalog Harga</span>
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full rounded-full opacity-0 group-hover:opacity-100"></span>
           </Link>
           <Link href="/register" className="group relative px-2 py-1">
-            <span className="group-hover:text-blue-700 transition-colors duration-300">Daftar Member</span>
+            <span className="group-hover:text-blue-700 transition-colors duration-300">Member</span>
             <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full rounded-full opacity-0 group-hover:opacity-100"></span>
           </Link>
         </nav>
         
-        <div className="w-full md:w-1/3 flex justify-end">
+        <div className="w-auto md:w-1/4 flex justify-end">
           <Link href="/cek-booking" className={`hidden md:flex items-center gap-2 bg-blue-50 text-blue-700 rounded-full font-medium hover:bg-blue-100 transition-all duration-300 ${isScrolled ? "px-4 py-2 text-sm" : "px-5 py-2.5"}`}>
             <span>Cek Pesanan</span>
           </Link>
