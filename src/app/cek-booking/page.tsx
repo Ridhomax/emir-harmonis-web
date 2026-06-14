@@ -193,7 +193,6 @@ export default function CekBookingPage() {
                   </p>
                 </div>
               </div>
-              </div>
               
               <div className="mt-4 pt-4 border-t border-slate-200 space-y-2">
                 <div className="flex justify-between">
