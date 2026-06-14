@@ -2,6 +2,8 @@ import prisma from "@/lib/prisma";
 import AdminDashboardClient from "@/components/AdminDashboardClient";
 import LogoutButton from "@/app/user/LogoutButton";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminPage() {
   const bookings = await prisma.booking.findMany({
     orderBy: { createdAt: 'desc' },
