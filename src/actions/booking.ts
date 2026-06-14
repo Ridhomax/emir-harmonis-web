@@ -146,7 +146,9 @@ export async function checkBookingStatus(prevState: any, formData: FormData) {
         bookingDate: booking.bookingDate.toISOString(),
         status: booking.status,
         paymentMethod: booking.paymentMethod,
-        paymentProof: booking.paymentProof
+        paymentProof: booking.paymentProof,
+        totalPrice: booking.totalPrice,
+        discountApplied: booking.discountApplied
       }
     };
   } catch (error) {

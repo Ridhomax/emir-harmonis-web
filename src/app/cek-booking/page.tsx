@@ -199,7 +199,7 @@ export default function CekBookingPage() {
                   <span className="text-slate-500">Total Harga</span>
                   <span className="font-bold text-slate-900">Rp {state.booking?.totalPrice?.toLocaleString('id-ID')}</span>
                 </div>
-                {state.booking?.discountApplied > 0 && (
+                {(state.booking?.discountApplied || 0) > 0 && (
                   <div className="flex justify-between text-green-600">
                     <span>Diskon Poin</span>
                     <span>-{state.booking?.discountApplied}%</span>
